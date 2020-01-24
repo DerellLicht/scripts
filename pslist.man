@@ -1,0 +1,38 @@
+Usage: pslist [-d][-m][-x][-t][-s [n] [-r n] [\\computer [-u username][-p password][name|pid]
+   -d          Show thread detail.
+   -m          Show memory detail.
+   -x          Show processes, memory information and threads.
+   -t          Show process tree.
+   -s [n]      Run in task-manager mode, for optional seconds specified.
+               Press Escape to abort.
+   -r n        Task-manager mode refresh rate in seconds (default is 1).
+   \\computer  Specifies remote computer.
+   -u          Optional user name for remote login.
+   -p          Optional password for remote login. If you don't present
+               on the command line pslist will prompt you for it if necessary.
+   name        Show information about processes that begin with the name
+               specified.
+   -e          Exact match the process name.
+   pid         Show information about specified process.
+
+All memory values are displayed in KB.
+Abbreviation key:
+   Pri         Priority
+   Thd         Number of Threads
+   Hnd         Number of Handles
+   VM          Virtual Memory
+   WS          Working Set
+   Priv        Private Virtual Memory
+   Priv Pk     Private Virtual Memory Peak
+   Faults      Page Faults
+   NonP        Non-Paged Pool
+   Page        Paged Pool
+   Cswtch      Context Switches
+
+//***************************************************************
+header example:
+Process memory detail for DERELICT:
+
+Name                Pid      VM      WS    Priv Priv Pk   Faults   NonP Page
+
+

@@ -1,0 +1,25 @@
+10      10      AT&S
+10      10      AT&S
+50      50      AT&S
+67      75      AT&S
+10      10      AT&S
+10      10      AT&S
+114     125     AT&S
+135     150     
+10      10      AT&S
+130     125     AT&S
+25      25      AT&S
+0       0.02    
+300     300     AT&S
+100     100     
+# gawk -f add.column.awk columns_data_file
+#  this parses output of 'pslist -m'
+#      VM      WS    Priv Priv Pk
+{ 
+   num_lines++; 
+   sum1 += $1
+   sum2 += $2
+}
+END { printf("In %d lines: total=%d, mine=%d\n", num_lines, sum1, sum2, sum3, sum4) ;
+}
+ 

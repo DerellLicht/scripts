@@ -1,4 +1,7 @@
 # cat clang-tidy.output.est | gawk -f clang-tidy.filter.awk
+# or
+# make check | gawk -f ..\clang-tidy.filter.awk
+# 
 # filter out note: entries in clang-tidy output
 # 
 # states:

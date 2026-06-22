@@ -1,6 +1,7 @@
 # cat clang-tidy.output.est | gawk -f clang-tidy.filter.awk
 # or
-# make check | gawk -f ..\clang-tidy.filter.awk
+# make check 2>&1 | gawk -f ..\clang-tidy.filter.awk
+# [ note re-direction of stderr ]
 # 
 # filter out note: entries in clang-tidy output
 # 
@@ -29,7 +30,7 @@ BEGIN {
       # do nothing
    }
    else {
-      print $0
+      printf("%s\n", $0);
    }
    
 }

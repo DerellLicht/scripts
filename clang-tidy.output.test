@@ -1,0 +1,58 @@
+D:\SourceCode\Git\binclock_redux Yes, Master?? > make check
+cmd /C "d:\llvm\bin\clang-tidy.exe  binclock.cpp about.cpp bclk_elements.cpp config.cpp der_libs/hyperlinks.cpp der_libs/common_funcs.cpp der_libs/winmsgs.cpp -- -Ider_libs -Wall"
+[1/7] Processing file D:/SourceCode/Git/binclock_redux/binclock.cpp.
+414 warnings generated.
+[2/7] Processing file D:/SourceCode/Git/binclock_redux/about.cpp.
+674 warnings generated.
+[3/7] Processing file D:/SourceCode/Git/binclock_redux/bclk_elements.cpp.
+947 warnings generated.
+[4/7] Processing file D:/SourceCode/Git/binclock_redux/config.cpp.
+1209 warnings generated.
+[5/7] Processing file D:/SourceCode/Git/binclock_redux/der_libs/hyperlinks.cpp.
+1469 warnings generated.
+[6/7] Processing file D:/SourceCode/Git/binclock_redux/der_libs/common_funcs.cpp.
+1730 warnings generated.
+[7/7] Processing file D:/SourceCode/Git/binclock_redux/der_libs/winmsgs.cpp.
+1991 warnings generated.
+D:/SourceCode/Git/binclock_redux/config.cpp:140:11: warning: Opened stream never closed. Potential resource leak [clang-analyzer-unix.Stream]
+  140 |    return 0;
+      |           ^
+D:/SourceCode/Git/binclock_redux/config.cpp:90:8: note: Assuming 'result' is equal to 0
+   90 |    if (result != 0) {
+      |        ^~~~~~~~~~~
+D:/SourceCode/Git/binclock_redux/config.cpp:90:4: note: Taking false branch
+   90 |    if (result != 0) {
+      |    ^
+D:/SourceCode/Git/binclock_redux/config.cpp:94:8: note: Assuming 'show_winmsgs' is false
+   94 |    if (show_winmsgs) {
+      |        ^~~~~~~~~~~~
+D:/SourceCode/Git/binclock_redux/config.cpp:94:4: note: Taking false branch
+   94 |    if (show_winmsgs) {
+      |    ^
+D:/SourceCode/Git/binclock_redux/config.cpp:97:15: note: Stream opened here
+   97 |    FILE *fd = _tfopen(ini_name, _T("rt")) ;
+      |               ^
+D:/llvm/include/tchar.h:729:17: note: expanded from macro '_tfopen'
+  729 | #define _tfopen fopen
+      |                 ^
+D:/SourceCode/Git/binclock_redux/config.cpp:97:15: note: Assuming that 'fopen' is successful
+   97 |    FILE *fd = _tfopen(ini_name, _T("rt")) ;
+      |               ^
+D:/llvm/include/tchar.h:729:17: note: expanded from macro '_tfopen'
+  729 | #define _tfopen fopen
+      |                 ^
+D:/SourceCode/Git/binclock_redux/config.cpp:98:8: note: 'fd' is not equal to null
+   98 |    if (fd == 0) {
+      |        ^~
+D:/SourceCode/Git/binclock_redux/config.cpp:98:4: note: Taking false branch
+   98 |    if (fd == 0) {
+      |    ^
+D:/SourceCode/Git/binclock_redux/config.cpp:102:4: note: Loop condition is false. Execution jumps to the end of the function
+  102 |    while (_fgetts(inpstr, sizeof(inpstr), fd) != 0) {
+      |    ^
+D:/SourceCode/Git/binclock_redux/config.cpp:140:11: note: Opened stream never closed. Potential resource leak
+  140 |    return 0;
+      |           ^
+Suppressed 2026 warnings (1896 in non-user code, 36 NOLINT, 94 with check filters).
+Use -header-filter=.* or leave it as default to display errors from all non-system headers. Use -system-headers to display errors from
+system headers as well.

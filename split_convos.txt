@@ -1,0 +1,7 @@
+This script was written by ClaudeAI on 07.07.26
+
+To reuse it later: drop your export JSON next to it, 
+update the SRC path at the top if the filename's different, 
+and run python3 split_convos.py. 
+It'll split the per-conversation .md files into /mnt/user-data/outputs 
+(or wherever you set OUT_DIR).

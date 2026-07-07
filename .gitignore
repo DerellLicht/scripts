@@ -1,1 +1,2 @@
-*.txt
+*output.txt
+status.*.free.txt

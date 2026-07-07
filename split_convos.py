@@ -1,10 +1,10 @@
 import json, re, os
 from datetime import datetime
 
-SRC = "/mnt/user-data/uploads/conversations_07_07_26.json"
-OUT_DIR = "/mnt/user-data/outputs"
+SRC = "conversations 07.07.26.json"
+OUT_DIR = "."
 
-with open(SRC) as f:
+with open(SRC, encoding="utf-8") as f:
     conversations = json.load(f)
 
 def slugify_name(name, max_words=4):
@@ -20,22 +20,22 @@ def tool_use_note(block):
     name = block.get("name", "tool")
     inp = block.get("input", {}) or {}
     if name == "web_search":
-        return f"*?? Searched the web: \"{inp.get('query','')}\"*"
+        return f"*🔧 Searched the web: \"{inp.get('query','')}\"*"
     if name == "image_search":
-        return f"*?? Searched images: \"{inp.get('query','')}\"*"
+        return f"*🔧 Searched images: \"{inp.get('query','')}\"*"
     if name == "bash_tool":
         cmd = inp.get("command", "")
-        return f"*?? Ran bash command:*\n```bash\n{cmd}\n```"
+        return f"*🔧 Ran bash command:*\n```bash\n{cmd}\n```"
     if name == "create_file":
-        return f"*?? Created file: `{inp.get('path','')}`*"
+        return f"*🔧 Created file: `{inp.get('path','')}`*"
     if name == "str_replace":
-        return f"*?? Edited file: `{inp.get('path','')}`*"
+        return f"*🔧 Edited file: `{inp.get('path','')}`*"
     if name == "view":
-        return f"*?? Viewed: `{inp.get('path','')}`*"
+        return f"*🔧 Viewed: `{inp.get('path','')}`*"
     if name == "present_files":
         paths = inp.get("filepaths", [])
-        return f"*?? Shared file(s): {', '.join(paths)}*"
-    return f"*?? Used tool: {name}*"
+        return f"*🔧 Shared file(s): {', '.join(paths)}*"
+    return f"*🔧 Used tool: {name}*"
 
 def render_content_blocks(blocks):
     parts = []
@@ -68,7 +68,8 @@ for conv in conversations:
     created = conv.get("created_at")
     date_str = fmt_date(created) if created else "unknown_date"
     slug = slugify_name(name)
-    filename = f"{slug}_{date_str}.md"
+    # filename = f"{slug}_{date_str}.md"
+    filename = f"{date_str}_{slug}.md"
     filepath = os.path.join(OUT_DIR, filename)
 
     lines = [f"# {name}", "", f"*{created[:10] if created else ''}*", ""]
@@ -84,7 +85,7 @@ for conv in conversations:
         lines.append(body)
         lines.append("")
 
-    with open(filepath, "w") as f:
+    with open(filepath, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
     written.append(filepath)

@@ -1,12 +1,27 @@
-# usage: python split_convos.py
+# usage: python split_convos.py [conversations_file_name]
 # access the export file via File -> Settings -> Privacy -> Export data
 # you will then need to use Zen browser to access the download link.
+# 
+# 07/10/26 
+# input filename now taken from command line
 import json, re, os, sys
 from datetime import datetime
+from pathlib import Path
 
 # SRC = "conversations 07.09.26.json"
-SRC = "conversations 07.09.26.json"
+SRC=sys.argv[1]
 OUT_DIR = "."
+
+# File path
+a = Path(SRC)
+
+# Check if the file exists
+if a.exists():
+    print(a,": File exists")
+else:
+    err = SRC,": File does not exist"
+    sys.exit(err) 
+
 
 with open(SRC, encoding="utf-8") as f:
     conversations = json.load(f)

@@ -1,7 +1,8 @@
+# usage: python split_convos.py
 import json, re, os
 from datetime import datetime
 
-SRC = "conversations 07.07.26.json"
+SRC = "conversations 07.09.26.json"
 OUT_DIR = "."
 
 with open(SRC, encoding="utf-8") as f:

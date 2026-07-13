@@ -12,16 +12,12 @@ from pathlib import Path
 SRC=sys.argv[1]
 OUT_DIR = "."
 
-# File path
-a = Path(SRC)
-
 # Check if the file exists
+a = Path(SRC)  # File path
 if a.exists():
     print(a,": File exists")
 else:
-    err = SRC,": File does not exist"
-    sys.exit(err) 
-
+    sys.exit(f"[{SRC}]: File does not exist")
 
 with open(SRC, encoding="utf-8") as f:
     conversations = json.load(f)

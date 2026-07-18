@@ -1,17 +1,16 @@
-This script was written by ClaudeAI on 07.07.26
+This script was written by ClaudeAI on 07.07.26 and modified a number of times
+between that date and 07.18.26
 It will split an exported conversations.json file into
 separate conversations in .md format.
 
 To use it: drop your export JSON next to it, 
 update the SRC path at the top if the filename's different, 
-and run 'python split_convos.py' . 
-It'll split the per-conversation .md files into /mnt/user-data/outputs 
+and run 'python split_convos.py conversations.json' . 
+It'll split the per-conversation .md files into current directory
 (or wherever you set OUT_DIR).
 
-//******************************************************
-script was modified on 07.09.26, to successfully pick up images in the conversations.
-
-//******************************************************
+//**********************************************************************************
 copy new conversations to:
 
 C:\notes\personal\ClaudeAI
+

@@ -32,6 +32,17 @@ def fmt_date(iso_str):
     return dt.strftime("%m.%d.%y")
 
 def tool_use_note(block, out_dir=None):
+    # A "tool_use" content block is Claude's structured record of calling one
+    # of its tools mid-conversation (web search, running bash, editing a
+    # file, etc.) — it's raw JSON meant for the API, not for a human reader:
+    # {"type": "tool_use", "name": "web_search", "input": {"query": "..."}}.
+    # This function's whole job is translating that JSON into one readable
+    # line (or block) of markdown to drop into the transcript, so the export
+    # reads like "Claude searched the web for X" instead of showing raw
+    # tool-call JSON. `name` picks which tool was called; `input` is that
+    # tool's arguments, and each `if` below knows how to summarize one
+    # specific tool's arguments. Tools not explicitly handled fall through
+    # to the generic line at the bottom.
     name = block.get("name", "tool")
     inp = block.get("input", {}) or {}
     if name == "web_search":
@@ -39,6 +50,8 @@ def tool_use_note(block, out_dir=None):
     if name == "image_search":
         return f"*? Searched images: \"{inp.get('query','')}\"*"
     if name == "bash_tool":
+        # Show the actual shell command that was run, in a fenced code block
+        # so it's distinguishable from Claude's prose.
         cmd = inp.get("command", "")
         return f"*? Ran bash command:*\n```bash\n{cmd}\n```"
     if name == "create_file":
@@ -48,9 +61,17 @@ def tool_use_note(block, out_dir=None):
     if name == "view":
         return f"*? Viewed: `{inp.get('path','')}`*"
     if name == "present_files":
+        # This tool can hand back more than one file at once, hence the list.
         paths = inp.get("filepaths", [])
         return f"*? Shared file(s): {', '.join(paths)}*"
     if name == "visualize:show_widget":
+        # This is the one branch that does more than format a string: the
+        # Visualizer tool's *actual* output (an SVG or HTML diagram) lives
+        # only in `input`, nowhere else in the export. If it's an SVG, we
+        # recover it as a real file: recolor it (see colorize_svg_tree, since
+        # claude.ai's own stylesheet that gave it color isn't available
+        # standalone) and write it to disk next to the .md transcript, then
+        # link it like an image.
         title = inp.get("title", "diagram")
         code = inp.get("widget_code", "")
         if code.strip().startswith("<svg") and out_dir is not None:
@@ -59,9 +80,11 @@ def tool_use_note(block, out_dir=None):
             svg_path = os.path.join(out_dir, svg_filename)
             with open(svg_path, "w", encoding="utf-8") as f:
                 f.write(fixed_svg)
-            return f"![{title}]({svg_filename})"
-        # HTML/interactive widgets can't be flattened to a static image
+            return f"![{title}](<{svg_filename}>)"
+        # HTML/interactive widgets have no static equivalent — there's
+        # nothing to save, so just note that one existed here.
         return f"*? Generated an interactive visual: \"{title}\" (not recoverable as a static image)*"
+    # Fallback for any tool call not specifically handled above.
     return f"*? Used tool: {name}*"
 
 IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg")
@@ -107,7 +130,7 @@ def colorize_svg_tree(svg_code):
         if "box" in classes:
             in_box = True
         if in_box and tag in ("rect", "circle", "ellipse"):
-            el.set("fill", "#fbfaf7")
+            el.set("fill", "#D9D8D3")
             el.set("stroke", "#888780")
         elif ramp and tag in ("rect", "circle", "ellipse"):
             stops = RAMPS[ramp]
@@ -123,7 +146,41 @@ def colorize_svg_tree(svg_code):
                 el.set("fill", stops["600"] if stops else "#5f5e5a")
                 el.set("font-size", "12px")
             el.set("font-family", "Arial, Helvetica, sans-serif")
-        for child in el:
+
+        # Orphan heading labels (class="th") that aren't already sitting on a
+        # box/ramp background are invisible-by-design against dark-themed
+        # viewers: their fill is a hardcoded dark color that assumes a light
+        # page background, which claude.ai's widget host normally guarantees
+        # but a standalone extracted SVG cannot. Give any such label its own
+        # background chip so it survives regardless of viewer theme.
+        children = list(el)
+        insert_offset = 0
+        for idx, child in enumerate(children):
+            child_tag = child.tag.split("}")[-1]
+            child_classes = classes_of(child)
+            if (not in_box) and child_tag == "text" and "th" in child_classes \
+                    and "dominant-baseline" not in child.attrib:
+                text_content = (child.text or "").strip()
+                font_size = 14.0
+                try:
+                    cx = float(child.get("x", "0"))
+                    cy = float(child.get("y", "0"))
+                except ValueError:
+                    cx = cy = 0.0
+                width = round(len(text_content) * font_size * 0.43 + font_size * 1.86, 1)
+                height = round(font_size * 1.6, 1)
+                chip = ET.Element("rect", {
+                    "x": str(round(cx - width / 2, 1)),
+                    "y": str(round(cy - font_size, 1)),
+                    "width": str(width),
+                    "height": str(height),
+                    "rx": "4",
+                    "fill": "#D9D8D3",
+                    "stroke": "#888780",
+                    "stroke-width": "0.5",
+                })
+                el.insert(idx + insert_offset, chip)
+                insert_offset += 1
             walk(child, ramp, in_box)
 
     walk(root, None, False)
@@ -133,13 +190,17 @@ def colorize_svg_tree(svg_code):
 def render_files_note(files):
     parts = []
     for f in files:
-        fname = f.get("file_name", "attached_file")
+        fname = f.get("file_name") or f.get("file_uuid") or "attached_file"
         if fname.lower().endswith(IMAGE_EXTS):
-            parts.append(
-                f"![{fname}]({fname})\n\n"
-                f"*(Image not included in export — save `{fname}` from claude.ai "
-                f"and place it in this same folder for the link above to work.)*"
-            )
+            # We can't know at generation time whether the image will be
+            # sitting next to this .md file when it's actually opened later
+            # (it may get copied to a different folder than where the JSON
+            # was parsed). So instead of checking existence now, we lean on
+            # the markdown renderer's own broken-image fallback: alt text is
+            # only displayed when the image fails to load, which is
+            # evaluated fresh by the viewer, in whatever folder the file
+            # currently lives, every time it's opened.
+            parts.append(f"![{fname}: file not found](<{fname}>)")
         else:
             parts.append(f"*? Attached file: `{fname}` (not included in export — save manually if needed)*")
     return "\n\n".join(parts)
@@ -180,6 +241,19 @@ for conv in conversations:
     filepath = os.path.join(OUT_DIR, filename)
 
     lines = [f"# {name}", "", f"*{created[:10] if created else ''}*", ""]
+
+    summary = (conv.get("summary") or "").strip()
+    # The field's own text already leads with a "**Conversation Overview**"
+    # heading; drop it since the <summary> tag already supplies that label.
+    summary = re.sub(r"^\*\*Conversation Overview\*\*\s*\n+", "", summary)
+    if summary:
+        lines.append("<details>")
+        lines.append("<summary>Conversation Overview</summary>")
+        lines.append("")
+        lines.append(summary)
+        lines.append("")
+        lines.append("</details>")
+        lines.append("")
 
     for msg in conv.get("chat_messages", []):
         sender = msg.get("sender")
